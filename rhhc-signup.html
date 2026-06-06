@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RHDevs :: Join</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=VT323&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #00ff41;
+    --green-dim: #00b32c;
+    --green-dark: #003b0f;
+    --green-glow: rgba(0,255,65,0.15);
+    --bg: #020d02;
+    --panel: rgba(2, 18, 4, 0.92);
+    --border: rgba(0,255,65,0.25);
+    --border-bright: rgba(0,255,65,0.6);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    color: var(--green);
+    overflow-x: hidden;
+  }
+
+  /* Matrix Canvas */
+  #matrix-canvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.18;
+  }
+
+  /* Scanline overlay */
+  body::after {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.08) 3px, rgba(0,0,0,0.08) 4px);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 2rem 1rem 4rem;
+  }
+
+  /* Boot sequence header */
+  .boot-bar {
+    width: 100%;
+    max-width: 660px;
+    margin-bottom: 1.5rem;
+    font-size: 11px;
+    color: var(--green-dim);
+    letter-spacing: 0.05em;
+    line-height: 1.8;
+    opacity: 0;
+    animation: fadeIn 0.5s ease 0.2s forwards;
+  }
+
+  .boot-bar .ok { color: var(--green); }
+  .boot-bar .warn { color: #ffe600; }
+
+  /* Main terminal panel */
+  .terminal {
+    width: 100%;
+    max-width: 660px;
+    background: var(--panel);
+    border: 1px solid var(--border-bright);
+    border-radius: 4px;
+    overflow: hidden;
+    opacity: 0;
+    animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1) 0.8s forwards;
+    box-shadow: 0 0 40px rgba(0,255,65,0.08), inset 0 0 60px rgba(0,0,0,0.4);
+  }
+
+  .titlebar {
+    background: rgba(0,255,65,0.07);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .titlebar-dots { display: flex; gap: 6px; }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .titlebar-text {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    color: var(--green-dim);
+    letter-spacing: 0.12em;
+  }
+
+  .titlebar-status {
+    font-size: 11px;
+    color: var(--green);
+  }
+
+  .terminal-body {
+    padding: 1.5rem 1.75rem 2rem;
+  }
+
+  /* Club header */
+  .club-header {
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1.25rem;
+  }
+
+  .club-tag {
+    font-size: 11px;
+    color: var(--green-dim);
+    letter-spacing: 0.15em;
+    margin-bottom: 6px;
+  }
+
+  .club-name {
+    font-family: 'VT323', monospace;
+    font-size: 36px;
+    color: var(--green);
+    line-height: 1;
+    margin-bottom: 6px;
+    text-shadow: 0 0 20px rgba(0,255,65,0.4);
+  }
+
+  .club-sub {
+    font-size: 12px;
+    color: var(--green-dim);
+    line-height: 1.6;
+  }
+
+  .club-sub .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 13px;
+    background: var(--green);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* Form fields */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .field.full { grid-column: 1 / -1; }
+
+  .field-label {
+    font-size: 10px;
+    color: var(--green-dim);
+    letter-spacing: 0.15em;
+  }
+
+  .field-label .prompt {
+    color: var(--green);
+    margin-right: 4px;
+  }
+
+  input[type=text], input[type=email], select, textarea {
+    background: rgba(0,255,65,0.04);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 8px 10px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    color: var(--green);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.2s, background 0.2s;
+    -webkit-appearance: none;
+  }
+
+  input[type=text]::placeholder,
+  input[type=email]::placeholder,
+  textarea::placeholder { color: rgba(0,255,65,0.25); }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--green);
+    background: rgba(0,255,65,0.07);
+    box-shadow: 0 0 0 2px rgba(0,255,65,0.08);
+  }
+
+  select option { background: #020d02; color: var(--green); }
+
+  textarea { resize: none; line-height: 1.5; }
+
+  /* Skills */
+  .skills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .skill-tag {
+    padding: 4px 11px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    font-size: 11px;
+    color: var(--green-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    background: transparent;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.04em;
+    user-select: none;
+  }
+
+  .skill-tag:hover { border-color: var(--green); color: var(--green); }
+  .skill-tag.on { background: rgba(0,255,65,0.12); border-color: var(--green); color: var(--green); }
+
+  /* Submit */
+  .submit-row {
+    margin-top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 13px;
+    background: rgba(0,255,65,0.08);
+    border: 1px solid var(--green);
+    border-radius: 2px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 14px;
+    letter-spacing: 0.18em;
+    color: var(--green);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-shadow: 0 0 10px rgba(0,255,65,0.5);
+  }
+
+  .submit-btn:hover {
+    background: rgba(0,255,65,0.16);
+    box-shadow: 0 0 20px rgba(0,255,65,0.15);
+  }
+
+  .submit-btn:active { transform: scale(0.99); }
+
+  .submit-btn.loading { opacity: 0.6; pointer-events: none; }
+
+  /* Footer tags */
+  .footer-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .ftag {
+    font-size: 11px;
+    color: var(--green-dim);
+    border: 1px solid var(--border);
+    padding: 3px 9px;
+    border-radius: 2px;
+    letter-spacing: 0.06em;
+  }
+
+  /* Divider */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 1.25rem 0;
+  }
+
+  /* Success screen */
+  #success {
+    display: none;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  .success-ascii {
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    color: var(--green);
+    line-height: 1.3;
+    margin-bottom: 1rem;
+    text-shadow: 0 0 20px rgba(0,255,65,0.5);
+  }
+
+  .success-msg {
+    font-size: 13px;
+    color: var(--green-dim);
+    line-height: 1.8;
+  }
+
+  .success-msg span { color: var(--green); }
+
+  /* Progress bar */
+  .progress-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--green);
+    width: 0%;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 6px var(--green);
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* Error highlight */
+  input.err, select.err, textarea.err { border-color: #ff4444 !important; }
+
+  @media (max-width: 500px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .club-name { font-size: 28px; }
+    .terminal-body { padding: 1.25rem 1.25rem 1.75rem; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="matrix-canvas"></canvas>
+
+<div class="page-wrap">
+
+  <div class="boot-bar">
+    <div>> RHDEVS_OS v2.6 booting... <span class="ok">[OK]</span></div>
+    <div>> Loading kernel modules... <span class="ok">[OK]</span></div>
+    <div>> Mounting /dev/hall0... <span class="ok">[OK]</span></div>
+    <div>> Initializing recruit protocol... <span class="warn">[AWAITING INPUT]</span></div>
+  </div>
+
+  <div class="terminal">
+    <div class="titlebar">
+      <div class="titlebar-dots">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+      </div>
+      <div class="titlebar-text">recruit@rhdevs: ~/apply</div>
+      <div class="titlebar-status">● LIVE</div>
+    </div>
+
+    <div class="terminal-body">
+
+      <div class="club-header">
+        <div class="club-tag">// RAFFLES HALL DEVELOPERS CLUB · NUS · AY 26/27</div>
+        <div class="club-name">RHDEVS</div>
+        <div class="club-sub">Build cool things. Grow together. Shape the future of Raffles Hall — one commit at a time.<span class="cursor"></span></div>
+      </div>
+
+      <div id="form-wrap">
+        <div class="form-grid">
+          <div class="field">
+            <label class="field-label"><span class="prompt">$</span> NAME</label>
+            <input type="text" id="f-name" placeholder="your_name" autocomplete="off">
+          </div>
+          <div class="field">
+            <label class="field-label"><span class="prompt">$</span> MATRIC NO.</label>
+            <input type="text" id="f-matric" placeholder="A0000000X" autocomplete="off">
+          </div>
+          <div class="field">
+            <label class="field-label"><span class="prompt">$</span> YEAR</label>
+            <select id="f-year">
+              <option value="" disabled selected>--select--</option>
+              <option>Year 1</option>
+              <option>Year 2</option>
+              <option>Year 3</option>
+              <option>Year 4</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label"><span class="prompt">$</span> FACULTY</label>
+            <input type="text" id="f-faculty" placeholder="computing / engin..." autocomplete="off">
+          </div>
+          <div class="field full">
+            <label class="field-label"><span class="prompt">$</span> EMAIL</label>
+            <input type="email" id="f-email" placeholder="e0000000@u.nus.edu" autocomplete="off">
+          </div>
+          <div class="field full">
+            <label class="field-label"><span class="prompt">$</span> TELEGRAM</label>
+            <input type="text" id="f-tele" placeholder="@yourhandle" autocomplete="off">
+          </div>
+        </div>
+
+        <hr class="divider">
+
+        <div class="field" style="margin-bottom:1rem;">
+          <label class="field-label" style="margin-bottom:6px;"><span class="prompt">$</span> SKILL STACK &nbsp;<span style="opacity:0.5">// select all that apply</span></label>
+          <div class="skills-wrap" id="skills-wrap">
+            <div class="skill-tag" onclick="toggleSkill(this)">python</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">javascript</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">C / C++</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">java</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">rust</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">linux / bash</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">web dev</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">ML / AI</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">cybersec / CTF</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">embedded / IoT</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">game dev</div>
+            <div class="skill-tag" onclick="toggleSkill(this)">total noob 🚀</div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:1rem;">
+          <label class="field-label" style="margin-bottom:6px;"><span class="prompt">$</span> WHY DO YOU WANT TO JOIN? &nbsp;<span style="opacity:0.5">// max 500 chars</span></label>
+          <textarea id="f-goal" rows="3" maxlength="500" placeholder="tell us what draws you to RHDevs — your goals, interests, what you hope to get out of it..."></textarea>
+          <div style="font-size:10px; color:var(--green-dim); text-align:right; margin-top:3px;"><span id="goal-count">0</span>/500</div>
+        </div>
+
+        <div class="submit-row">
+          <div style="font-size:11px; color:var(--green-dim);">
+            <span style="color:var(--green);">></span> Form completion: <span id="pct">0%</span>
+            <div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+          </div>
+          <button class="submit-btn" id="submit-btn" onclick="handleSubmit()">
+            &gt;&gt; ./submit_application.sh
+          </button>
+          <div class="footer-tags">
+            <span class="ftag">learn cutting-edge tech</span>
+            <span class="ftag">organize hackathons</span>
+            <span class="ftag">tech workshops</span>
+            <span class="ftag">open source</span>
+            <span class="ftag">build together</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="success">
+        <div class="success-ascii">APPLICATION RECEIVED</div>
+        <div class="success-ascii" style="font-size:18px; margin-bottom:1.5rem;" id="success-name"></div>
+        <div class="success-msg">
+          Your application has been logged.<br><br>
+          We review all applications and conduct <span>interviews</span> before extending membership.<br><br>
+          Sit tight — we'll reach out via <span>Telegram</span> with further instructions.<br><br>
+          <span>// await further instructions</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Matrix rain
+(function() {
+  const canvas = document.getElementById('matrix-canvas');
+  const ctx = canvas.getContext('2d');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()アイウエオカキクケコサシスセソタチツテトナニヌネノ';
+  let cols, drops;
+
+  function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    cols = Math.floor(canvas.width / 16);
+    drops = Array(cols).fill(1);
+  }
+
+  function draw() {
+    ctx.fillStyle = 'rgba(2,13,2,0.05)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#00ff41';
+    ctx.font = '14px Share Tech Mono';
+    drops.forEach((y, i) => {
+      const ch = chars[Math.floor(Math.random() * chars.length)];
+      ctx.fillStyle = y < 3 ? '#ccffcc' : '#00ff41';
+      ctx.globalAlpha = Math.random() * 0.5 + 0.3;
+      ctx.fillText(ch, i * 16, y * 16);
+      ctx.globalAlpha = 1;
+      if (y * 16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
+    });
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  setInterval(draw, 50);
+})();
+
+// Skill toggle
+function toggleSkill(el) { el.classList.toggle('on'); updateProgress(); }
+
+// Progress
+const fields = ['f-name','f-matric','f-year','f-faculty','f-email','f-tele','f-goal'];
+fields.forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', updateProgress);
+  if (el) el.addEventListener('change', updateProgress);
+});
+
+document.getElementById('f-goal').addEventListener('input', function() {
+  document.getElementById('goal-count').textContent = this.value.length;
+});
+
+function updateProgress() {
+  let filled = 0;
+  fields.forEach(id => {
+    const v = document.getElementById(id)?.value?.trim();
+    if (v) filled++;
+  });
+  const pct = Math.round((filled / fields.length) * 100);
+  document.getElementById('pct').textContent = pct + '%';
+  document.getElementById('prog').style.width = pct + '%';
+}
+
+// ⚙️ PASTE YOUR APPS SCRIPT WEB APP URL HERE
+const SHEET_ENDPOINT = 'YOUR_APPS_SCRIPT_URL_HERE';
+
+// Submit
+async function handleSubmit() {
+  const required = ['f-name','f-matric','f-year','f-faculty','f-email','f-tele'];
+  let valid = true;
+  required.forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('err');
+    if (!el.value.trim()) { el.classList.add('err'); valid = false; }
+  });
+  if (!valid) return;
+
+  const btn = document.getElementById('submit-btn');
+  btn.classList.add('loading');
+  btn.textContent = '>> encrypting payload...';
+
+  const skills = [...document.querySelectorAll('.skill-tag.on')].map(el => el.textContent).join(', ');
+
+  const payload = {
+    name:    document.getElementById('f-name').value.trim(),
+    matric:  document.getElementById('f-matric').value.trim(),
+    year:    document.getElementById('f-year').value,
+    faculty: document.getElementById('f-faculty').value.trim(),
+    email:   document.getElementById('f-email').value.trim(),
+    telegram:document.getElementById('f-tele').value.trim(),
+    skills:  skills || 'none selected',
+    goal:    document.getElementById('f-goal').value.trim(),
+    timestamp: new Date().toISOString()
+  };
+
+  setTimeout(() => { btn.textContent = '>> transmitting...'; }, 600);
+
+  try {
+    await fetch(SHEET_ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) {
+    console.warn('Submission error:', e);
+  }
+
+  setTimeout(() => {
+    document.getElementById('form-wrap').style.display = 'none';
+    const success = document.getElementById('success');
+    success.style.display = 'block';
+    const name = payload.name.toUpperCase();
+    document.getElementById('success-name').textContent = '> welcome, ' + name;
+  }, 1800);
+}
+</script>
+</body>
+</html>
