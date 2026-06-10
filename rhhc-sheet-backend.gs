@@ -16,10 +16,10 @@ function doPost(e) {
       sheet = ss.insertSheet(SHEET_NAME);
       sheet.appendRow([
         'Timestamp', 'Name', 'Matric No.', 'Year',
-        'Faculty', 'Email', 'Telegram', 'Skills', 'Goal'
+        'Department', 'Major', 'Email', 'Telegram', 'Skills', 'Goal'
       ]);
       // Bold + freeze header row
-      sheet.getRange(1, 1, 1, 9).setFontWeight('bold');
+      sheet.getRange(1, 1, 1, 10).setFontWeight('bold');
       sheet.setFrozenRows(1);
     }
 
@@ -28,7 +28,8 @@ function doPost(e) {
       data.name,
       data.matric,
       data.year,
-      data.faculty,
+      data.department,
+      data.major,
       data.email,
       data.telegram,
       data.skills,

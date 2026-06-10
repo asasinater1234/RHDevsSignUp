@@ -339,6 +339,7 @@
 
   /* Error highlight */
   input.err, select.err, textarea.err { border-color: #ff4444 !important; }
+  .skills-wrap.err { border: 1px solid #ff4444; border-radius: 2px; padding: 6px; }
 
   @media (max-width: 500px) {
     .form-grid { grid-template-columns: 1fr; }
@@ -354,9 +355,9 @@
 <div class="page-wrap">
 
   <div class="boot-bar">
-    <div>> RHDEVS_OS v2.6 booting... <span class="ok">[OK]</span></div>
+    <div>> RHDEVS v26.27 booting... <span class="ok">[OK]</span></div>
     <div>> Loading kernel modules... <span class="ok">[OK]</span></div>
-    <div>> Mounting /dev/hall0... <span class="ok">[OK]</span></div>
+    <div>> Mounting /RafflesHall/Devs... <span class="ok">[OK]</span></div>
     <div>> Initializing recruit protocol... <span class="warn">[AWAITING INPUT]</span></div>
   </div>
 
@@ -399,9 +400,9 @@
               <option>Year 4</option>
             </select>
           </div>
-          <div class="field">
-            <label class="field-label"><span class="prompt">$</span> FACULTY</label>
-            <input type="text" id="f-faculty" placeholder="computing / engin..." autocomplete="off">
+          <div class="field full">
+            <label class="field-label"><span class="prompt">$</span> MAJOR</label>
+            <input type="text" id="f-major" placeholder="computer science / engin..." autocomplete="off">
           </div>
           <div class="field full">
             <label class="field-label"><span class="prompt">$</span> EMAIL</label>
@@ -416,20 +417,62 @@
         <hr class="divider">
 
         <div class="field" style="margin-bottom:1rem;">
-          <label class="field-label" style="margin-bottom:6px;"><span class="prompt">$</span> SKILL STACK &nbsp;<span style="opacity:0.5">// select all that apply</span></label>
-          <div class="skills-wrap" id="skills-wrap">
-            <div class="skill-tag" onclick="toggleSkill(this)">python</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">javascript</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">C / C++</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">java</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">rust</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">linux / bash</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">web dev</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">ML / AI</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">cybersec / CTF</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">embedded / IoT</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">game dev</div>
-            <div class="skill-tag" onclick="toggleSkill(this)">total noob 🚀</div>
+          <label class="field-label" style="margin-bottom:6px;"><span class="prompt">$</span> DEPARTMENT &nbsp;<span style="opacity:0.5">// select one or more</span></label>
+          <div class="skills-wrap" id="dept-wrap">
+            <div class="skill-tag dept-tag" data-dept="Engineering" onclick="toggleDept(this)">Engineering</div>
+            <div class="skill-tag dept-tag" data-dept="Design" onclick="toggleDept(this)">Design</div>
+            <div class="skill-tag dept-tag" data-dept="Publicity" onclick="toggleDept(this)">Publicity</div>
+          </div>
+        </div>
+
+        <div class="field" style="margin-bottom:1rem;" id="skills-section">
+          <label class="field-label" style="margin-bottom:6px;"><span class="prompt">$</span> SKILL STACK &nbsp;<span style="opacity:0.5">// optional — select all that apply</span></label>
+
+          <div id="skills-placeholder" style="font-size:11px; color:var(--green-dim); opacity:0.6;">// select a department above to see relevant skills</div>
+
+          <div class="skill-group" id="skills-Engineering" style="display:none;">
+            <div style="font-size:10px; color:var(--green-dim); margin-bottom:4px;">// engineering stack</div>
+            <div class="skills-wrap">
+              <div class="skill-tag" onclick="toggleSkill(this)">python</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">javascript</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">C / C++</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">java</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">rust</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">linux / bash</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">web dev</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">ML / AI</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">cybersec / CTF</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">embedded / IoT</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">game dev</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">total noob 🚀</div>
+            </div>
+          </div>
+
+          <div class="skill-group" id="skills-Design" style="display:none; margin-top:10px;">
+            <div style="font-size:10px; color:var(--green-dim); margin-bottom:4px;">// design stack</div>
+            <div class="skills-wrap">
+              <div class="skill-tag" onclick="toggleSkill(this)">figma</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">photoshop</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">illustrator</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">canva</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">UI / UX</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">total noob 🎨</div>
+            </div>
+          </div>
+
+          <div class="skill-group" id="skills-Publicity" style="display:none; margin-top:10px;">
+            <div style="font-size:10px; color:var(--green-dim); margin-bottom:4px;">// publicity stack</div>
+            <div class="skills-wrap">
+              <div class="skill-tag" onclick="toggleSkill(this)">content writing</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">social media</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">photography</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">videography</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">video editing</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">graphic design</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">event planning</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">marketing</div>
+              <div class="skill-tag" onclick="toggleSkill(this)">total noob 📣</div>
+            </div>
           </div>
         </div>
 
@@ -512,8 +555,31 @@
 // Skill toggle
 function toggleSkill(el) { el.classList.toggle('on'); updateProgress(); }
 
+// Department toggle — shows/hides the matching skill stack(s)
+function toggleDept(el) {
+  el.classList.toggle('on');
+  updateSkillSections();
+  updateProgress();
+}
+
+function updateSkillSections() {
+  const activeDepts = [...document.querySelectorAll('.dept-tag.on')].map(el => el.dataset.dept);
+  let anyVisible = false;
+  ['Engineering', 'Design', 'Publicity'].forEach(dept => {
+    const section = document.getElementById('skills-' + dept);
+    const visible = activeDepts.includes(dept);
+    section.style.display = visible ? 'block' : 'none';
+    if (!visible) {
+      section.querySelectorAll('.skill-tag.on').forEach(tag => tag.classList.remove('on'));
+    } else {
+      anyVisible = true;
+    }
+  });
+  document.getElementById('skills-placeholder').style.display = anyVisible ? 'none' : 'block';
+}
+
 // Progress
-const fields = ['f-name','f-matric','f-year','f-faculty','f-email','f-tele','f-goal'];
+const fields = ['f-name','f-matric','f-year','f-major','f-email','f-tele','f-goal'];
 fields.forEach(id => {
   const el = document.getElementById(id);
   if (el) el.addEventListener('input', updateProgress);
@@ -526,11 +592,13 @@ document.getElementById('f-goal').addEventListener('input', function() {
 
 function updateProgress() {
   let filled = 0;
+  const total = fields.length + 1; // +1 for department
   fields.forEach(id => {
     const v = document.getElementById(id)?.value?.trim();
     if (v) filled++;
   });
-  const pct = Math.round((filled / fields.length) * 100);
+  if (document.querySelectorAll('.dept-tag.on').length > 0) filled++;
+  const pct = Math.round((filled / total) * 100);
   document.getElementById('pct').textContent = pct + '%';
   document.getElementById('prog').style.width = pct + '%';
 }
@@ -540,26 +608,33 @@ const SHEET_ENDPOINT = 'https://script.google.com/macros/s/AKfycbydTsDXcE_lY1eAN
 
 // Submit
 async function handleSubmit() {
-  const required = ['f-name','f-matric','f-year','f-faculty','f-email','f-tele'];
+  const required = ['f-name','f-matric','f-year','f-major','f-email','f-tele'];
   let valid = true;
   required.forEach(id => {
     const el = document.getElementById(id);
     el.classList.remove('err');
     if (!el.value.trim()) { el.classList.add('err'); valid = false; }
   });
+
+  const deptWrap = document.getElementById('dept-wrap');
+  const depts = [...document.querySelectorAll('.dept-tag.on')].map(el => el.dataset.dept);
+  deptWrap.classList.remove('err');
+  if (depts.length === 0) { deptWrap.classList.add('err'); valid = false; }
+
   if (!valid) return;
 
   const btn = document.getElementById('submit-btn');
   btn.classList.add('loading');
   btn.textContent = '>> encrypting payload...';
 
-  const skills = [...document.querySelectorAll('.skill-tag.on')].map(el => el.textContent).join(', ');
+  const skills = [...document.querySelectorAll('#skills-section .skill-tag.on')].map(el => el.textContent).join(', ');
 
   const payload = {
     name:    document.getElementById('f-name').value.trim(),
     matric:  document.getElementById('f-matric').value.trim(),
     year:    document.getElementById('f-year').value,
-    faculty: document.getElementById('f-faculty').value.trim(),
+    department: depts.join(', '),
+    major:   document.getElementById('f-major').value.trim(),
     email:   document.getElementById('f-email').value.trim(),
     telegram:document.getElementById('f-tele').value.trim(),
     skills:  skills || 'none selected',
